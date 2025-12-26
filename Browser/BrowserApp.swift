@@ -2,16 +2,23 @@
 //  BrowserApp.swift
 //  Browser
 //
-//  Created by Samuel Ray on 12/21/25.
-//
 
 import SwiftUI
+import SwiftData
 
 @main
 struct BrowserApp: App {
+    @State private var browserManager = BrowserManager()
+    @State private var tabsManager = TabsManager()
+    @State private var appSettings = AppSettings()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            BrowserView()
+                .environment(browserManager)
+                .environment(tabsManager)
+                .environment(appSettings)
         }
+        .modelContainer(for: HistoryEntry.self)
     }
 }
