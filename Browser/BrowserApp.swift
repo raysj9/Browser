@@ -16,6 +16,6 @@ struct BrowserApp: App {
                 .environment(appSettings)
                 .environment(toastManager)
         }
-        .modelContainer(for: [HistoryEntry.self, BookmarkEntry.self])
+        .modelContainer(for: [HistoryEntry.self, BookmarkEntry.self, BrowserTab.self])
     }
 }

@@ -1,9 +1,13 @@
 // WIP
 
 import SwiftUI
+import SwiftData
 
 struct TabsViewer: View {
+    @Environment(BrowserManager.self) private var browserManager
     @Environment(TabsManager.self) private var tabsManager
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \BrowserTab.lastAccessed, order: .reverse) private var tabs: [BrowserTab]
 
     var body: some View {
         ZStack {
@@ -18,6 +22,11 @@ struct TabsViewer: View {
         }
     }
 
+    private var filteredTabs: [BrowserTab] {
+        let isPrivate = tabsManager.tabSection == .privateTabs
+        return tabs.filter { $0.isPrivate == isPrivate }
+    }
+
     private var tabsView: some View {
         let columns = [
             GridItem(.flexible()),
@@ -26,12 +35,20 @@ struct TabsViewer: View {
 
         return ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(tabsManager.tabs) { tab in
-                    TabPreviewCard(tab: tab) {
-                        withAnimation(.snappy) {
-                            tabsManager.delete(tab)
+                ForEach(filteredTabs) { tab in
+                    TabPreviewCard(
+                        tab: tab,
+                        isSelected: browserManager.currentTabID == tab.id,
+                        onDelete: {
+                            withAnimation(.snappy) {
+                                browserManager.deleteTab(tab)
+                            }
+                        },
+                        onSelect: {
+                            browserManager.switchToTab(tab)
+                            dismiss()
                         }
-                    }
+                    )
                 }
             }
             .padding()
@@ -61,7 +78,8 @@ struct TabsViewer: View {
 
         return HStack {
             Button {
-
+                browserManager.createNewTab(isPrivate: tabsManager.tabSection == .privateTabs)
+                dismiss()
             } label: {
                 Image(systemName: "plus")
                     .font(.title)
@@ -75,7 +93,7 @@ struct TabsViewer: View {
 
             Picker("Private/Regular Tabs", selection: tabSectionBinding) {
                 Text("Private").tag(TabType.privateTabs)
-                Text("\(tabsManager.tabs.count) Tabs").tag(TabType.regularTabs)
+                Text("\(regularTabCount) Tabs").tag(TabType.regularTabs)
             }
             .frame(height: 50)
             .pickerStyle(.segmented)
@@ -85,7 +103,7 @@ struct TabsViewer: View {
             Spacer(minLength: 20)
 
             Button {
-
+                dismiss()
             } label: {
                 Image(systemName: "checkmark")
                     .font(.title)
@@ -96,9 +114,15 @@ struct TabsViewer: View {
             .buttonStyle(.plain)
         }
     }
+
+    private var regularTabCount: Int {
+        tabs.filter { !$0.isPrivate }.count
+    }
 }
 
 #Preview {
     TabsViewer()
+        .environment(BrowserManager())
         .environment(TabsManager())
+        .modelContainer(for: [BrowserTab.self])
 }

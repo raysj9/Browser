@@ -32,6 +32,7 @@ final class BrowserManager: NSObject {
     var isPresentingSettingsSheet: Bool = false
     var isPresentingBookmarksSheet: Bool = false
     var isPresentingSummarySheet: Bool = false
+    var isPresentingTabsView: Bool = false
     
     // Address bar scroll behavior
     var addressBarOffset: CGFloat = 0
@@ -43,7 +44,9 @@ final class BrowserManager: NSObject {
     var toolbarOffset: CGFloat = 0
     private var toolbarHideOffset: CGFloat = 100
 
-    private var hasLoadedHome: Bool = false
+    private var hasLoadedInitialTab: Bool = false
+
+    var currentTabID: UUID?
     
     private var lastRecordedHistoryURL: URL?
     private var lastRecordedHistoryAt: Date?
@@ -80,10 +83,34 @@ final class BrowserManager: NSObject {
         load(url: url)
     }
 
-    func loadHomeIfNeeded(url: URL) {
-        guard !hasLoadedHome else { return }
-        hasLoadedHome = true
-        load(url: url)
+    func loadInitialTabIfNeeded(defaultURL: URL) {
+        guard !hasLoadedInitialTab else { return }
+        hasLoadedInitialTab = true
+
+        guard let context else {
+            load(url: defaultURL)
+            return
+        }
+
+        if let activeTab = activeTab() {
+            load(url: activeTab.url)
+            return
+        }
+
+        if let existingTab = mostRecentTab() {
+            currentTabID = existingTab.id
+            load(url: existingTab.url)
+            return
+        }
+
+        let newTab = BrowserTab(
+            title: defaultURL.host ?? defaultURL.absoluteString,
+            url: defaultURL,
+            lastAccessed: .now
+        )
+        context.insert(newTab)
+        currentTabID = newTab.id
+        load(url: defaultURL)
     }
 
     func urlFromUserInput(_ input: String) -> URL {
@@ -192,6 +219,51 @@ final class BrowserManager: NSObject {
     func refreshPage() {
         webView.reload()
         updateNavigationState()
+    }
+
+    func createNewTab(isPrivate: Bool = false) {
+        guard let context else { return }
+        let url = appSettings?.defaultSearchEngine.searchURL(for: "") ?? URL(string: "https://www.google.com")!
+        let newTab = BrowserTab(
+            title: url.host ?? url.absoluteString,
+            url: url,
+            lastAccessed: .now,
+            isPrivate: isPrivate
+        )
+        context.insert(newTab)
+        currentTabID = newTab.id
+        load(url: url)
+    }
+
+    func switchToTab(_ tab: BrowserTab) {
+        currentTabID = tab.id
+        tab.lastAccessed = .now
+        load(url: tab.url)
+    }
+
+    func deleteTab(_ tab: BrowserTab) {
+        guard let context else { return }
+        let wasCurrent = tab.id == currentTabID
+        context.delete(tab)
+
+        guard wasCurrent else { return }
+
+        if let nextTab = mostRecentTab() {
+            currentTabID = nextTab.id
+            load(url: nextTab.url)
+        } else {
+            createNewTab(isPrivate: tab.isPrivate)
+        }
+    }
+
+    func refreshCurrentTabPreview() {
+        guard let activeTab = activeTab() else { return }
+
+        Task { @MainActor in
+            if let data = await captureSnapshotData() {
+                activeTab.previewImageData = data
+            }
+        }
     }
 
     @discardableResult
@@ -306,13 +378,14 @@ final class BrowserManager: NSObject {
             webView.goForward()
 
         case .newTab:
-            print("Create new tab")
+            createNewTab()
 
         case .openMenu:
             isPresentingPageMenuSheet.toggle()
 
         case .showTabs:
-            print("Show tabs")
+            refreshCurrentTabPreview()
+            isPresentingTabsView = true
         }
 
         updateNavigationState()
@@ -365,6 +438,7 @@ extension BrowserManager: WKNavigationDelegate {
         applyWebViewGestureWorkarounds(force: true)
         updateNavigationState()
         recordHistoryVisitIfNeeded()
+        updateCurrentTabMetadata()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -375,6 +449,63 @@ extension BrowserManager: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         applyWebViewGestureWorkarounds(force: true)
         updateNavigationState()
+    }
+}
+
+private extension BrowserManager {
+    func activeTab() -> BrowserTab? {
+        guard let context, let currentTabID else { return nil }
+        let descriptor = FetchDescriptor<BrowserTab>(
+            predicate: #Predicate { $0.id == currentTabID }
+        )
+        return try? context.fetch(descriptor).first
+    }
+
+    func mostRecentTab() -> BrowserTab? {
+        guard let context else { return nil }
+        let descriptor = FetchDescriptor<BrowserTab>(
+            sortBy: [SortDescriptor(\.lastAccessed, order: .reverse)]
+        )
+        return try? context.fetch(descriptor).first
+    }
+
+    func updateCurrentTabMetadata() {
+        guard let context else { return }
+        guard let url = webView.url else { return }
+
+        let capturedURL = url
+        let now = Date()
+
+        Task { @MainActor in
+            let title = await resolvePageTitle(for: webView, url: capturedURL)
+            let tab = activeTab() ?? {
+                let newTab = BrowserTab(
+                    title: title,
+                    url: capturedURL,
+                    lastAccessed: now
+                )
+                context.insert(newTab)
+                currentTabID = newTab.id
+                return newTab
+            }()
+
+            tab.title = title
+            tab.url = capturedURL
+            tab.lastAccessed = now
+        }
+    }
+
+    func captureSnapshotData() async -> Data? {
+        let targetWidth: CGFloat = 360
+
+        return await withCheckedContinuation { continuation in
+            let config = WKSnapshotConfiguration()
+            config.snapshotWidth = NSNumber(value: Double(targetWidth))
+            webView.takeSnapshot(with: config) { image, _ in
+                let data = image?.jpegData(compressionQuality: 0.7)
+                continuation.resume(returning: data)
+            }
+        }
     }
 }
 
