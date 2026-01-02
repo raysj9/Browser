@@ -9,6 +9,7 @@ final class PageSummaryViewModel {
     enum State: Equatable {
         case idle
         case loading
+        case streaming(PageSummaryOutput.PartiallyGenerated)
         case unavailable(String)
         case failed(String)
         case ready(PageSummary)
@@ -75,14 +76,18 @@ final class PageSummaryViewModel {
 
             let reduceSession = LanguageModelSession(instructions: reduceInstructions)
             let reducePrompt = reducePrompt(title: title, url: url, points: allPoints)
-            let response = try await reduceSession.respond(to: reducePrompt, generating: PageSummaryOutput.self)
+            let stream = reduceSession.streamResponse(to: reducePrompt, generating: PageSummaryOutput.self)
 
-            let summary = PageSummary(
-                title: response.content.title,
-                tldr: response.content.tldr,
-                keyPoints: response.content.key_points,
-                importantDetails: response.content.important_details
-            )
+            var lastPartial: PageSummaryOutput.PartiallyGenerated?
+            for try await partial in stream {
+                lastPartial = partial.content
+                state = .streaming(partial.content)
+            }
+
+            guard let summary = summary(from: lastPartial) else {
+                state = .failed("Summary incomplete. Please try again.")
+                return
+            }
 
             state = .ready(summary)
         } catch {
@@ -148,6 +153,21 @@ final class PageSummaryViewModel {
         normalized = regex?.stringByReplacingMatches(in: normalized, range: range, withTemplate: "\n\n") ?? normalized
 
         return normalized
+    }
+
+    private func summary(from partial: PageSummaryOutput.PartiallyGenerated?) -> PageSummary? {
+        guard let partial else { return nil }
+        guard let title = partial.title else { return nil }
+        guard let tldr = partial.tldr else { return nil }
+        guard let keyPoints = partial.key_points, keyPoints.count >= 5 else { return nil }
+        guard let importantDetails = partial.important_details, importantDetails.count >= 3 else { return nil }
+
+        return PageSummary(
+            title: title,
+            tldr: tldr,
+            keyPoints: Array(keyPoints.prefix(5)),
+            importantDetails: Array(importantDetails.prefix(3))
+        )
     }
 
     private var mapInstructions: String {

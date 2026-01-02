@@ -1,7 +1,7 @@
 import FoundationModels
 
 @Generable
-struct PageSummaryOutput {
+struct PageSummaryOutput: Equatable {
     var title: String
     var tldr: String
 
