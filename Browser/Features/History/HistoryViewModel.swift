@@ -1,8 +1,3 @@
-//
-//  HistoryViewModel.swift
-//  Browser
-//
-
 import SwiftData
 import SwiftUI
 

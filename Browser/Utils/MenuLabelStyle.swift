@@ -1,8 +1,3 @@
-//
-//  MenuLabelStyle.swift
-//  Browser
-//
-
 import SwiftUI
 
 struct MenuLabelStyle: LabelStyle {

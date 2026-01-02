@@ -1,8 +1,3 @@
-//
-//  ToolbarView.swift
-//  Browser
-//
-
 import SwiftUI
 
 struct ToolbarView: View {

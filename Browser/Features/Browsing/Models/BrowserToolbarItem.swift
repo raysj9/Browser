@@ -1,8 +1,3 @@
-//
-//  BrowserToolbarItem.swift
-//  Browser
-//
-
 enum BrowserToolbarItem: CaseIterable {
     case back
     case forward

@@ -1,8 +1,3 @@
-//
-//  SettingsView.swift
-//  Browser
-//
-
 // WIP
 
 import SwiftUI

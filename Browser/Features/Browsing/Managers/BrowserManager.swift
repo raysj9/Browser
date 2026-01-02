@@ -1,8 +1,3 @@
-//
-//  BrowserManager.swift
-//  Browser
-//
-
 import SwiftData
 import SwiftUI
 import UIKit
@@ -35,6 +30,18 @@ final class BrowserManager: NSObject {
     var isPresentingHistorySheet: Bool = false
     var isPresentingPageMenuSheet: Bool = false
     var isPresentingSettingsSheet: Bool = false
+    var isPresentingBookmarksSheet: Bool = false
+    var isPresentingSummarySheet: Bool = false
+    
+    // Address bar scroll behavior
+    var addressBarOffset: CGFloat = 0
+    private var addressBarHideOffset: CGFloat = -100
+    private var lastScrollOffset: CGFloat = 0
+    private var scrollVelocity: CGFloat = 0
+    
+    // Toolbar scroll behavior
+    var toolbarOffset: CGFloat = 0
+    private var toolbarHideOffset: CGFloat = 100
 
     private var hasLoadedHome: Bool = false
     
@@ -48,10 +55,8 @@ final class BrowserManager: NSObject {
         super.init()
 
         webView.navigationDelegate = self
-        if #available(iOS 26.0, *) {
-            webView.scrollView.delegate = self
-            applyWebViewGestureWorkarounds(force: true)
-        }
+        webView.scrollView.delegate = self
+        applyWebViewGestureWorkarounds(force: true)
 
         // KVO for loading/progress/url + canGoBack/canGoForward updates
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: [.new], context: nil)
@@ -75,15 +80,12 @@ final class BrowserManager: NSObject {
         load(url: url)
     }
 
-    /// Loads the initial "home" page once per app launch.
-    /// SwiftUI view lifecycles can trigger `.task` multiple times, which would create a duplicate history entry.
     func loadHomeIfNeeded(url: URL) {
         guard !hasLoadedHome else { return }
         hasLoadedHome = true
         load(url: url)
     }
 
-    /// Converts user-entered text into a loadable URL, falling back to the default search engine when needed.
     func urlFromUserInput(_ input: String) -> URL {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
         let defaultSearchEngine = appSettings?.defaultSearchEngine ?? .google
@@ -97,7 +99,7 @@ final class BrowserManager: NSObject {
             return directURL
         }
 
-        // If the text looks like a hostname (e.g., example.com), prepend https and try again.
+        // If the text looks like a hostname prepend https and try again.
         if let httpsURL = URL(string: "https://\(trimmed)"),
            let host = URLComponents(url: httpsURL, resolvingAgainstBaseURL: false)?.host,
            isLikelyHostname(host) {
@@ -123,7 +125,7 @@ final class BrowserManager: NSObject {
     private func shouldRecordHistoryVisit(for url: URL, now: Date) -> Bool {
         guard isUserVisibleHistoryURL(url) else { return false }
         
-        // WKWebView can call `didFinish` multiple times for the same URL quickly (iframes / redirects / reflows).
+        // WKWebView can call didFinish multiple times for the same URL quickly (iframes/redirects/reflows).
         if let lastURL = lastRecordedHistoryURL,
            let lastAt = lastRecordedHistoryAt,
            lastURL == url,
@@ -135,7 +137,6 @@ final class BrowserManager: NSObject {
     }
     
     private func resolvePageTitle(for webView: WKWebView, url: URL) async -> String {
-        // Give WebKit a bit to update webView.title after didFinish.
         try? await Task.sleep(for: .milliseconds(150))
         
         let existing = webView.title?
@@ -193,6 +194,43 @@ final class BrowserManager: NSObject {
         updateNavigationState()
     }
 
+    @discardableResult
+    func addBookmarkForCurrentPage() -> Bool {
+        guard let context else { return false }
+        guard let url = webView.url else { return false }
+
+        let capturedURL = url
+        let capturedAt = Date()
+
+        Task { @MainActor in
+            guard self.webView.url == capturedURL else { return }
+
+            let title = await resolvePageTitle(for: self.webView, url: capturedURL)
+
+            guard self.webView.url == capturedURL else { return }
+
+            let entry = BookmarkEntry(title: title, url: capturedURL, date: capturedAt)
+            context.insert(entry)
+        }
+
+        return true
+    }
+    
+    func showAddressBar() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            addressBarOffset = 0
+            toolbarOffset = 0
+        }
+    }
+    
+    func setAddressBarHideOffset(_ offset: CGFloat) {
+        addressBarHideOffset = offset
+    }
+    
+    func setToolbarHideOffset(_ offset: CGFloat) {
+        toolbarHideOffset = offset
+    }
+
     func updateNavigationState() {
         // WKWebView can report canGoBack = true due to an internal about:blank entry or duplicate loads.
         // Derive a "real" back/forward state from the back-forward list and ignore non-user-visible items.
@@ -220,8 +258,6 @@ final class BrowserManager: NSObject {
     /// Prevents an OS-level crash in UIKit gesture delay handling that can be triggered by WKWebView
     /// during taps/scrolls (`-[__NSArrayM insertObject:atIndex:]: object cannot be nil`).
     private func applyWebViewGestureWorkarounds(force: Bool = false) {
-        guard #available(iOS 26.0, *) else { return }
-
         // Throttle: can be called frequently while scrolling.
         let now = Date.timeIntervalSinceReferenceDate
         if !force, (now - lastGestureWorkaroundApplyTime) < 0.2 { return }
@@ -349,5 +385,74 @@ extension BrowserManager: UIScrollViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         applyWebViewGestureWorkarounds()
+        
+        guard !addressBarIsActive else { return }
+        
+        let currentOffset = scrollView.contentOffset.y
+        let delta = currentOffset - lastScrollOffset
+        
+        // Only respond to meaningful scroll movements (ignore tiny jitters)
+        guard abs(delta) > 1 else { return }
+        
+        // Calculate velocity for more responsive hiding
+        scrollVelocity = delta
+        
+        // Determine if we should hide or show the bars
+        // Hide when scrolling down (delta > 0), show when scrolling up (delta < 0)
+        let addressTargetOffset: CGFloat
+        let toolbarTargetOffset: CGFloat
+        
+        if delta > 0 {
+            // Scrolling down - hide both bars completely off-screen
+            // Use a threshold to avoid hiding on small scrolls
+            if currentOffset > 50 {
+                addressTargetOffset = addressBarHideOffset
+                toolbarTargetOffset = toolbarHideOffset
+            } else {
+                addressTargetOffset = 0
+                toolbarTargetOffset = 0
+            }
+        } else {
+            // Scrolling up - show both bars
+            addressTargetOffset = 0
+            toolbarTargetOffset = 0
+        }
+        
+        withAnimation(.easeOut(duration: 0.25)) {
+            addressBarOffset = addressTargetOffset
+            toolbarOffset = toolbarTargetOffset
+        }
+        
+        lastScrollOffset = currentOffset
+    }
+    
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        // Snap to fully hidden or fully visible based on velocity and current position
+        guard !addressBarIsActive else { return }
+        
+        let addressTargetOffset: CGFloat
+        let toolbarTargetOffset: CGFloat
+        
+        if velocity.y > 0.5 {
+            // Fast downward scroll - hide completely off-screen
+            addressTargetOffset = addressBarHideOffset
+            toolbarTargetOffset = toolbarHideOffset
+        } else if velocity.y < -0.5 {
+            // Fast upward scroll - show
+            addressTargetOffset = 0
+            toolbarTargetOffset = 0
+        } else {
+            // Snap to nearest state based on current position
+            let addressMidpoint = addressBarHideOffset / 2
+            addressTargetOffset = addressBarOffset < addressMidpoint ? addressBarHideOffset : 0
+            
+            let toolbarMidpoint = toolbarHideOffset / 2
+            toolbarTargetOffset = toolbarOffset > toolbarMidpoint ? toolbarHideOffset : 0
+        }
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            addressBarOffset = addressTargetOffset
+            toolbarOffset = toolbarTargetOffset
+        }
     }
 }

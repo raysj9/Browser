@@ -1,8 +1,3 @@
-//
-//  BrowserApp.swift
-//  Browser
-//
-
 import SwiftUI
 import SwiftData
 
@@ -11,6 +6,7 @@ struct BrowserApp: App {
     @State private var browserManager = BrowserManager()
     @State private var tabsManager = TabsManager()
     @State private var appSettings = AppSettings()
+    @State private var toastManager = ToastManager()
     
     var body: some Scene {
         WindowGroup {
@@ -18,7 +14,8 @@ struct BrowserApp: App {
                 .environment(browserManager)
                 .environment(tabsManager)
                 .environment(appSettings)
+                .environment(toastManager)
         }
-        .modelContainer(for: HistoryEntry.self)
+        .modelContainer(for: [HistoryEntry.self, BookmarkEntry.self])
     }
 }

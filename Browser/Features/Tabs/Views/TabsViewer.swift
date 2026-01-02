@@ -1,8 +1,3 @@
-//
-//  TabViewer.swift
-//  Browser
-//
-
 // WIP
 
 import SwiftUI

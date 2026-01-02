@@ -1,8 +1,3 @@
-//
-//  TouchBlockingView.swift
-//  Browser
-//
-
 import SwiftUI
 
 /// A transparent view that *still intercepts touches*.

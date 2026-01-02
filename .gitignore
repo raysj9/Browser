@@ -45,6 +45,7 @@ playground.xcworkspace
 
 # macOS
 .DS_Store
+Local-Documentation/
 
 # Backup files
 *.orig

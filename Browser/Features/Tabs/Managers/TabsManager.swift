@@ -1,8 +1,3 @@
-//
-//  TabsManager.swift
-//  Browser
-//
-
 // WIP
 
 import SwiftUI

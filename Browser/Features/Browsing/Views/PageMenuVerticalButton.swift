@@ -1,8 +1,3 @@
-//
-//  PageMenuVerticalButton.swift
-//  Browser
-//
-
 import SwiftUI
 
 struct PageMenuVerticalButton: View {

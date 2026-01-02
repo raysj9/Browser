@@ -1,8 +1,3 @@
-//
-//  TabPreviewCard.swift
-//  Browser
-//
-
 import SwiftUI
 
 struct TabPreviewCard: View {

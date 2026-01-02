@@ -1,8 +1,3 @@
-//
-//  BrowserTab.swift
-//  Browser
-//
-
 import SwiftUI
 
 struct BrowserTab: Identifiable {

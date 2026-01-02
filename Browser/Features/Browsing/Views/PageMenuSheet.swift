@@ -1,26 +1,56 @@
-//
-//  PageMenuSheet.swift
-//  Browser
-//
-
 import SwiftUI
 import WebKit
 
 struct PageMenuSheet: View {
     @Environment(BrowserManager.self) private var browser
+    @Environment(ToastManager.self) private var toastManager
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         VStack {
             List {
                 Section {
-                    Label("Bookmark Page", systemImage: "star")
-                        .labelStyle(.menu)
+                    Button {
+                        let didAdd = browser.addBookmarkForCurrentPage()
+                        dismiss()
+                        browser.isPresentingPageMenuSheet = false
+                        if didAdd {
+                            Task { @MainActor in
+                                try? await Task.sleep(for: .milliseconds(250))
+                                toastManager.show(
+                                    message: "Bookmark added",
+                                    systemImage: "star.fill",
+                                    action: {
+                                        browser.isPresentingBookmarksSheet = true
+                                    }
+                                )
+                            }
+                        }
+                    } label: {
+                        Label("Bookmark Page", systemImage: "star")
+                            .labelStyle(.menu)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                     
                     Label("Find in Page...", systemImage: "magnifyingglass")
                         .labelStyle(.menu)
 
-                    Label("Share", systemImage: "square.and.arrow.up")
-                        .labelStyle(.menu)
+                    if let url = browser.webView.url {
+                        ShareLink(item: url) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                                .labelStyle(.menu)
+                                .contentShape(Rectangle())
+                        }
+                        .onTapGesture {
+                            browser.isPresentingPageMenuSheet = false
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .labelStyle(.menu)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Section {
@@ -31,7 +61,8 @@ struct PageMenuSheet: View {
                             title: "Bookmarks",
                             systemImage: "star"
                         ) {
-                            print("Pressed Bookmarks")
+                            browser.isPresentingPageMenuSheet = false
+                            browser.isPresentingBookmarksSheet = true
                         }
                         
                         Spacer()
@@ -70,4 +101,5 @@ struct PageMenuSheet: View {
 #Preview {
     PageMenuSheet()
         .environment(BrowserManager())
+        .environment(ToastManager())
 }

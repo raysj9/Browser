@@ -1,8 +1,3 @@
-//
-//  AppSettings.swift
-//  Browser
-//
-
 import Foundation
 import SwiftUI
 

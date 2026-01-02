@@ -1,8 +1,3 @@
-//
-//  SearchEngine.swift
-//  Browser
-//
-
 import SwiftUI
 
 enum SearchEngine: String, CaseIterable, Codable {

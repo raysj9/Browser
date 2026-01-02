@@ -1,8 +1,3 @@
-//
-//  AddressBarView.swift
-//  Browser
-//
-
 import SwiftUI
 import WebKit
 
@@ -23,6 +18,10 @@ struct AddressBarView: View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack {
+                    if !browser.addressBarIsActive {
+                        summaryButton
+                    }
+
                     Spacer()
 
                     if browser.addressBarIsActive {
@@ -87,6 +86,7 @@ struct AddressBarView: View {
             .lineLimit(1)
             .contentShape(Rectangle())
             .onTapGesture {
+                browser.showAddressBar()
                 browser.addressBarIsActive = true
                 isFieldFocused = true
             }
@@ -116,6 +116,16 @@ struct AddressBarView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    var summaryButton: some View {
+        Button {
+            browser.isPresentingSummarySheet = true
+        } label: {
+            Image(systemName: "sparkles")
+                .foregroundStyle(.yellow)
+        }
+        .buttonStyle(.plain)
     }
     
     var cancelButton: some View {
