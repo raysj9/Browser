@@ -10,9 +10,20 @@
 		22903B352EFF086500BCF080 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 22903B342EFF086500BCF080 /* README.md */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		22A0B4FC2F1A1234001A1A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 229590692EF8BABA0052E149 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 229590702EF8BABA0052E149;
+			remoteInfo = Browser;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		22903B342EFF086500BCF080 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		229590712EF8BABA0052E149 /* Browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Browser.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		22A0B4F42F1A1234001A1A1A /* BrowserTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrowserTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -21,10 +32,22 @@
 			path = Browser;
 			sourceTree = "<group>";
 		};
+		22C013F22F09CE9F00AE22DE /* BrowserTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BrowserTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2295906E2EF8BABA0052E149 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22A0B4F82F1A1234001A1A1A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -39,6 +62,7 @@
 			children = (
 				22903B342EFF086500BCF080 /* README.md */,
 				229590732EF8BABA0052E149 /* Browser */,
+				22C013F22F09CE9F00AE22DE /* BrowserTests */,
 				229590722EF8BABA0052E149 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -47,6 +71,7 @@
 			isa = PBXGroup;
 			children = (
 				229590712EF8BABA0052E149 /* Browser.app */,
+				22A0B4F42F1A1234001A1A1A /* BrowserTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +101,27 @@
 			productReference = 229590712EF8BABA0052E149 /* Browser.app */;
 			productType = "com.apple.product-type.application";
 		};
+		22A0B4FB2F1A1234001A1A1A /* BrowserTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22A0B4FE2F1A1234001A1A1A /* Build configuration list for PBXNativeTarget "BrowserTests" */;
+			buildPhases = (
+				22A0B4FA2F1A1234001A1A1A /* Sources */,
+				22A0B4F82F1A1234001A1A1A /* Frameworks */,
+				22A0B4F92F1A1234001A1A1A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				22A0B5002F1A1234001A1A1A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				22C013F22F09CE9F00AE22DE /* BrowserTests */,
+			);
+			name = BrowserTests;
+			productName = BrowserTests;
+			productReference = 22A0B4F42F1A1234001A1A1A /* BrowserTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -87,6 +133,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					229590702EF8BABA0052E149 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					22A0B4FB2F1A1234001A1A1A = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -108,6 +157,7 @@
 			projectRoot = "";
 			targets = (
 				229590702EF8BABA0052E149 /* Browser */,
+				22A0B4FB2F1A1234001A1A1A /* BrowserTests */,
 			);
 		};
 /* End PBXProject section */
@@ -121,6 +171,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22A0B4F92F1A1234001A1A1A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -131,7 +188,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22A0B4FA2F1A1234001A1A1A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		22A0B5002F1A1234001A1A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 229590702EF8BABA0052E149 /* Browser */;
+			targetProxy = 22A0B4FC2F1A1234001A1A1A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2295907A2EF8BABC0052E149 /* Debug */ = {
@@ -329,6 +401,52 @@
 			};
 			name = Release;
 		};
+		22A0B4FD2F1A1234001A1A1A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3KZS7Z8CN;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.raysj.BrowserTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Browser.app/Browser";
+			};
+			name = Debug;
+		};
+		22A0B4FF2F1A1234001A1A1A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3KZS7Z8CN;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.raysj.BrowserTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Browser.app/Browser";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -346,6 +464,15 @@
 			buildConfigurations = (
 				2295907D2EF8BABC0052E149 /* Debug */,
 				2295907E2EF8BABC0052E149 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		22A0B4FE2F1A1234001A1A1A /* Build configuration list for PBXNativeTarget "BrowserTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22A0B4FD2F1A1234001A1A1A /* Debug */,
+				22A0B4FF2F1A1234001A1A1A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
