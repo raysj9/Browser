@@ -13,6 +13,12 @@ struct ToastView: View {
             Text(toast.message)
                 .font(.subheadline)
                 .fontWeight(.semibold)
+
+            if let trailingSystemImage = toast.trailingSystemImage {
+                Image(systemName: trailingSystemImage)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+            }
         }
         .foregroundStyle(.primary)
         .padding(.vertical, 10)
@@ -25,6 +31,12 @@ struct ToastView: View {
     ZStack {
         Color.gray.opacity(0.2)
 
-        ToastView(toast: ToastItem(message: "Bookmark added", systemImage: "star.fill"))
+        ToastView(
+            toast: ToastItem(
+                message: "Bookmark added",
+                systemImage: "star.fill",
+                trailingSystemImage: "chevron.right"
+            )
+        )
     }
 }

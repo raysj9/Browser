@@ -1,8 +1,10 @@
 import SwiftUI
 import WebKit
+import FoundationModels
 
 struct AddressBarView: View {
     @Environment(BrowserManager.self) private var browser
+    @Environment(AppSettings.self) private var appSettings
 
     @FocusState private var isFieldFocused: Bool
     @Namespace private var namespace
@@ -18,7 +20,7 @@ struct AddressBarView: View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack {
-                    if !browser.addressBarIsActive {
+                    if !browser.addressBarIsActive && supportsFoundationModels {
                         summaryButton
                     }
 
@@ -126,6 +128,10 @@ struct AddressBarView: View {
                 .foregroundStyle(.yellow)
         }
         .buttonStyle(.plain)
+    }
+
+    private var supportsFoundationModels: Bool {
+        appSettings.aiFeaturesEnabled && SystemLanguageModel.default.availability == .available
     }
     
     var cancelButton: some View {

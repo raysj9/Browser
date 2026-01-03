@@ -83,11 +83,27 @@ final class BrowserManager: NSObject {
         load(url: url)
     }
 
-    func loadInitialTabIfNeeded(defaultURL: URL) {
+    func loadInitialTabIfNeeded() {
         guard !hasLoadedInitialTab else { return }
         hasLoadedInitialTab = true
+        
+        let fallbackURL = appSettings?.defaultSearchEngine.searchURL(for: "") ?? URL(string: "https://www.google.com")!
+        let defaultURL = appSettings?.homepageURL ?? fallbackURL
+        let shouldRestore = appSettings?.restoreSessionOnLaunch ?? true
 
         guard let context else {
+            load(url: defaultURL)
+            return
+        }
+
+        if !shouldRestore {
+            let newTab = BrowserTab(
+                title: defaultURL.host ?? defaultURL.absoluteString,
+                url: defaultURL,
+                lastAccessed: .now
+            )
+            context.insert(newTab)
+            currentTabID = newTab.id
             load(url: defaultURL)
             return
         }
@@ -150,6 +166,7 @@ final class BrowserManager: NSObject {
     }
     
     private func shouldRecordHistoryVisit(for url: URL, now: Date) -> Bool {
+        if activeTab()?.isPrivate == true { return false }
         guard isUserVisibleHistoryURL(url) else { return false }
         
         // WKWebView can call didFinish multiple times for the same URL quickly (iframes/redirects/reflows).
@@ -221,14 +238,17 @@ final class BrowserManager: NSObject {
         updateNavigationState()
     }
 
-    func createNewTab(isPrivate: Bool = false) {
+    func createNewTab(isPrivateOverride: Bool? = nil) {
         guard let context else { return }
-        let url = appSettings?.defaultSearchEngine.searchURL(for: "") ?? URL(string: "https://www.google.com")!
+        let url = appSettings?.homepageURL
+            ?? appSettings?.defaultSearchEngine.searchURL(for: "")
+            ?? URL(string: "https://www.google.com")!
+        let resolvedIsPrivate = isPrivateOverride ?? (activeTab()?.isPrivate ?? false)
         let newTab = BrowserTab(
             title: url.host ?? url.absoluteString,
             url: url,
             lastAccessed: .now,
-            isPrivate: isPrivate
+            isPrivate: resolvedIsPrivate
         )
         context.insert(newTab)
         currentTabID = newTab.id
@@ -252,7 +272,7 @@ final class BrowserManager: NSObject {
             currentTabID = nextTab.id
             load(url: nextTab.url)
         } else {
-            createNewTab(isPrivate: tab.isPrivate)
+            createNewTab(isPrivateOverride: tab.isPrivate)
         }
     }
 

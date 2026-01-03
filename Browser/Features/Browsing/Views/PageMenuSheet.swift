@@ -5,6 +5,7 @@ struct PageMenuSheet: View {
     @Environment(BrowserManager.self) private var browser
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
+    @State private var bookmarkHapticTrigger = false
     
     var body: some View {
         VStack {
@@ -15,11 +16,13 @@ struct PageMenuSheet: View {
                         dismiss()
                         browser.isPresentingPageMenuSheet = false
                         if didAdd {
+                            bookmarkHapticTrigger.toggle()
                             Task { @MainActor in
                                 try? await Task.sleep(for: .milliseconds(250))
                                 toastManager.show(
                                     message: "Bookmark added",
                                     systemImage: "star.fill",
+                                    trailingSystemImage: "chevron.right",
                                     action: {
                                         browser.isPresentingBookmarksSheet = true
                                     }
@@ -94,6 +97,7 @@ struct PageMenuSheet: View {
             .scrollContentBackground(.hidden)
             .scrollDisabled(true)
         }
+        .sensoryFeedback(.success, trigger: bookmarkHapticTrigger)
     }
 }
 

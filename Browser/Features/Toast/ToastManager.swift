@@ -8,11 +8,22 @@ final class ToastManager {
     @ObservationIgnored
     private var dismissTask: Task<Void, Never>?
 
-    func show(message: String, systemImage: String? = nil, duration: TimeInterval = 3.0, action: (() -> Void)? = nil) {
+    func show(
+        message: String,
+        systemImage: String? = nil,
+        trailingSystemImage: String? = nil,
+        duration: TimeInterval = 3.0,
+        action: (() -> Void)? = nil
+    ) {
         dismissTask?.cancel()
 
         withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
-            toast = ToastItem(message: message, systemImage: systemImage, action: action)
+            toast = ToastItem(
+                message: message,
+                systemImage: systemImage,
+                trailingSystemImage: trailingSystemImage,
+                action: action
+            )
         }
 
         dismissTask = Task { @MainActor in

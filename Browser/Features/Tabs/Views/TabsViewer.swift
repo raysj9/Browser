@@ -8,6 +8,7 @@ struct TabsViewer: View {
     @Environment(TabsManager.self) private var tabsManager
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \BrowserTab.lastAccessed, order: .reverse) private var tabs: [BrowserTab]
+    @State private var deleteHapticTrigger = false
 
     var body: some View {
         ZStack {
@@ -20,6 +21,7 @@ struct TabsViewer: View {
                     .padding(.horizontal)
             }
         }
+        .sensoryFeedback(.impact, trigger: deleteHapticTrigger)
     }
 
     private var filteredTabs: [BrowserTab] {
@@ -42,6 +44,7 @@ struct TabsViewer: View {
                         onDelete: {
                             withAnimation(.snappy) {
                                 browserManager.deleteTab(tab)
+                                deleteHapticTrigger.toggle()
                             }
                         },
                         onSelect: {
@@ -78,7 +81,7 @@ struct TabsViewer: View {
 
         return HStack {
             Button {
-                browserManager.createNewTab(isPrivate: tabsManager.tabSection == .privateTabs)
+                browserManager.createNewTab()
                 dismiss()
             } label: {
                 Image(systemName: "plus")

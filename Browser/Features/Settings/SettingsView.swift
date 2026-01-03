@@ -7,6 +7,8 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
+            @Bindable var settings = appSettings
+
             List {
                 Section("General") {
                     NavigationLink {
@@ -20,6 +22,17 @@ struct SettingsView: View {
                             Text(appSettings.defaultSearchEngine.title)
                         }
                     }
+
+                    Toggle("Restore Previous Session", isOn: $settings.restoreSessionOnLaunch)
+
+                    TextField("Homepage URL", text: $settings.homepageURLString)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        .autocorrectionDisabled()
+                }
+
+                Section("AI") {
+                    Toggle("Enable AI Features", isOn: $settings.aiFeaturesEnabled)
                 }
             }
         }

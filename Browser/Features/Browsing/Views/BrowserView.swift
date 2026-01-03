@@ -104,8 +104,7 @@ struct BrowserView: View {
         .task {
             manager.context = context
             manager.appSettings = appSettings
-            let defaultURL = appSettings.defaultSearchEngine.searchURL(for: "")
-            manager.loadInitialTabIfNeeded(defaultURL: defaultURL)
+            manager.loadInitialTabIfNeeded()
         }
     }
 }
