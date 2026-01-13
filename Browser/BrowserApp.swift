@@ -15,6 +15,7 @@ struct BrowserApp: App {
                 .environment(tabsManager)
                 .environment(appSettings)
                 .environment(toastManager)
+                .preferredColorScheme(appSettings.appAppearance.colorScheme)
         }
         .modelContainer(for: [HistoryEntry.self, BookmarkEntry.self, BrowserTab.self])
     }

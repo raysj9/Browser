@@ -125,7 +125,6 @@ struct AddressBarView: View {
             browser.isPresentingSummarySheet = true
         } label: {
             Image(systemName: "sparkles")
-                .foregroundStyle(.yellow)
         }
         .buttonStyle(.plain)
     }

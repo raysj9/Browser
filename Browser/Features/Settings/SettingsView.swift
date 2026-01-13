@@ -34,6 +34,15 @@ struct SettingsView: View {
                 Section("AI") {
                     Toggle("Enable AI Features", isOn: $settings.aiFeaturesEnabled)
                 }
+
+                Section("Appearance") {
+                    Picker("App Appearance", selection: $settings.appAppearance) {
+                        ForEach(AppAppearance.allCases) { appearance in
+                            Text(appearance.title)
+                                .tag(appearance)
+                        }
+                    }
+                }
             }
         }
     }

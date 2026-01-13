@@ -1,9 +1,43 @@
 import Foundation
 import SwiftUI
 
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+    
+    var id: Self { self }
+    
+    var title: String {
+        switch self {
+        case .system:
+            return "System"
+        case .light:
+            return "Light"
+        case .dark:
+            return "Dark"
+        }
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system:
+            return nil
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        }
+    }
+}
+
 @Observable
 class AppSettings {
-    var darkMode = false
+    var appAppearance: AppAppearance = .system {
+        didSet {
+            appearanceRawValue = appAppearance.rawValue
+        }
+    }
     
     @ObservationIgnored
     @AppStorage("restoreSessionOnLaunch") var restoreSessionOnLaunch: Bool = true
@@ -17,13 +51,18 @@ class AppSettings {
     @ObservationIgnored
     @AppStorage("defaultSearchEngine") private var searchEngineRawValue: String = SearchEngine.google.rawValue
     
-    var defaultSearchEngine: SearchEngine {
-        get {
-            SearchEngine(rawValue: searchEngineRawValue) ?? .google
+    @ObservationIgnored
+    @AppStorage("appAppearance") private var appearanceRawValue: String = AppAppearance.system.rawValue
+
+    var defaultSearchEngine: SearchEngine = .google {
+        didSet {
+            searchEngineRawValue = defaultSearchEngine.rawValue
         }
-        set {
-            searchEngineRawValue = newValue.rawValue
-        }
+    }
+
+    init() {
+        appAppearance = AppAppearance(rawValue: appearanceRawValue) ?? .system
+        defaultSearchEngine = SearchEngine(rawValue: searchEngineRawValue) ?? .google
     }
     
     var homepageURL: URL? {
