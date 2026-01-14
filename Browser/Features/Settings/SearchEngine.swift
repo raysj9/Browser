@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 enum SearchEngine: String, CaseIterable, Codable {
@@ -49,5 +50,35 @@ enum SearchEngine: String, CaseIterable, Codable {
         }
         
         return URL(string: urlString)!
+    }
+
+    func suggestionsURL(for query: String) -> URL {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let encodedQuery = trimmedQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmedQuery
+
+        let urlString: String
+        switch self {
+        case .google:
+            urlString = "https://suggestqueries.google.com/complete/search?client=firefox&q=\(encodedQuery)"
+        case .bing:
+            urlString = "https://api.bing.com/osjson.aspx?query=\(encodedQuery)"
+        case .duckduckgo:
+            urlString = "https://duckduckgo.com/ac/?q=\(encodedQuery)"
+        }
+
+        return URL(string: urlString)!
+    }
+
+    func parseSuggestions(from data: Data) -> [String] {
+        switch self {
+        case .duckduckgo:
+            let json = try? JSONSerialization.jsonObject(with: data)
+            guard let array = json as? [[String: Any]] else { return [] }
+            return array.compactMap { $0["phrase"] as? String }
+        case .google, .bing:
+            let json = try? JSONSerialization.jsonObject(with: data)
+            guard let array = json as? [Any], array.count > 1 else { return [] }
+            return (array[1] as? [String]) ?? []
+        }
     }
 }
