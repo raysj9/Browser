@@ -51,6 +51,13 @@ struct AddressBarView: View {
             .padding(.vertical)
             .frame(maxWidth: .infinity)
             .background(Color(uiColor: .secondarySystemBackground))
+            .overlay(alignment: .bottom) {
+                ProgressView(value: browser.estimatedProgress)
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: .infinity)
+                    .opacity(browser.isLoading ? 1 : 0)
+                    .padding(.bottom, 4)
+            }
             .onChange(of: browser.addressBarIsActive) { _, active in
                 if active {
                     isFieldFocused = true
@@ -118,19 +125,12 @@ struct AddressBarView: View {
     }
     
     var refreshButton: some View {
-        Group {
-            if browser.isLoading {
-                ProgressView(value: browser.estimatedProgress)
-                    .progressViewStyle(.circular)
-            } else {
-                Button {
-                    browser.refreshPage()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .buttonStyle(.plain)
-            }
+        Button {
+            browser.refreshPage()
+        } label: {
+            Image(systemName: "arrow.clockwise")
         }
+        .buttonStyle(.plain)
     }
 
     var summaryButton: some View {
