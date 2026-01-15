@@ -1,5 +1,4 @@
 import SwiftUI
-import WebKit
 import FoundationModels
 
 struct AddressBarView: View {
@@ -7,7 +6,6 @@ struct AddressBarView: View {
     @Environment(AppSettings.self) private var appSettings
 
     @FocusState private var isFieldFocused: Bool
-    @Namespace private var namespace
     @State private var suggestionsModel = SearchSuggestionsViewModel()
 
     private var urlBinding: Binding<String> {
@@ -20,37 +18,39 @@ struct AddressBarView: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
-                HStack {
-                    if !browser.addressBarIsActive && supportsFoundationModels && !isSearchResultsPage {
+                if !browser.addressBarIsActive {
+                    if supportsFoundationModels && !isSearchEnginePage {
                         summaryButton
-                    }
-
-                    Spacer()
-
-                    if browser.addressBarIsActive {
-                        addressTextField
                     } else {
-                        addressText
-                    }
-
-                    Spacer()
-                    
-                    if browser.addressBarIsActive {
-                        clearAddressBarTextButton
-                    } else {
-                        refreshButton
+                        summaryButton
+                            .hidden()
+                            .accessibilityHidden(true)
                     }
                 }
-                .background(TouchBlockingView())
-                .padding(.horizontal)
-                .padding(.vertical)
-                .frame(maxWidth: .infinity)
+
+                Spacer()
 
                 if browser.addressBarIsActive {
+                    addressTextField
+                } else {
+                    addressText
+                }
+
+                Spacer()
+
+                if browser.addressBarIsActive {
+                    clearAddressBarTextButton
                     cancelButton
+                } else {
+                    refreshButton
                 }
             }
             .contentShape(Rectangle())
+            .background(TouchBlockingView())
+            .padding(.horizontal)
+            .padding(.vertical)
+            .frame(maxWidth: .infinity)
+            .background(Color(uiColor: .secondarySystemBackground))
             .onChange(of: browser.addressBarIsActive) { _, active in
                 if active {
                     isFieldFocused = true
@@ -148,17 +148,12 @@ struct AddressBarView: View {
     
     var cancelButton: some View {
         Button {
-            withAnimation {
-                browser.addressBarIsActive.toggle()
-            }
+            browser.addressBarIsActive.toggle()
         } label: {
-            Image(systemName: "xmark")
-                .padding()
+            Text("Cancel")
+                .foregroundStyle(.blue)
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular, in: .circle)
-        .glassEffectID("xmark", in: namespace)
-        .glassEffectTransition(.materialize)
     }
 
     var suggestionsList: some View {
@@ -186,9 +181,8 @@ struct AddressBarView: View {
             }
         }
         .padding(.vertical, 8)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .glassEffect(.regular, in: .containerRelative)
-        .glassEffectID("suggestions", in: namespace)
     }
 
     private func applySuggestion(_ suggestion: String) {
@@ -229,8 +223,18 @@ struct AddressBarView: View {
         return searchQueryText(host: host, components: components) != nil
     }
 
+    private var isSearchEnginePage: Bool {
+        let trimmed = browser.urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let url = URL(string: trimmed),
+              let host = URLComponents(url: url, resolvingAgainstBaseURL: false)?.host else {
+            return false
+        }
+        return isSearchEngineHost(host) || isSearchResultsPage
+    }
+
     private func searchQueryText(host: String, components: URLComponents) -> String? {
-        guard isDefaultSearchQueryHost(host),
+        guard isSearchEngineHost(host),
               let query = components.queryItems?.first(where: { $0.name == "q" })?.value,
               !query.isEmpty else {
             return nil
@@ -238,14 +242,14 @@ struct AddressBarView: View {
         return query.removingPercentEncoding ?? query
     }
 
-    private func isDefaultSearchQueryHost(_ host: String) -> Bool {
-        switch appSettings.defaultSearchEngine {
-        case .google:
-            return host == "www.google.com" || host == "google.com"
-        case .bing:
-            return host == "www.bing.com" || host == "bing.com"
-        case .duckduckgo:
-            return host == "duckduckgo.com" || host == "www.duckduckgo.com"
+    private func isSearchEngineHost(_ host: String) -> Bool {
+        switch host {
+        case "www.google.com", "google.com",
+             "www.bing.com", "bing.com",
+             "www.duckduckgo.com", "duckduckgo.com":
+            return true
+        default:
+            return false
         }
     }
 }
