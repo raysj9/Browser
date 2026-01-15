@@ -22,7 +22,7 @@ struct AddressBarView: View {
             GlassEffectContainer(spacing: 12) {
                 HStack(spacing: 12) {
                     HStack {
-                        if !browser.addressBarIsActive && supportsFoundationModels {
+                        if !browser.addressBarIsActive && supportsFoundationModels && !isSearchResultsPage {
                             summaryButton
                         }
 
@@ -99,7 +99,8 @@ struct AddressBarView: View {
     }
     
     var addressText: some View {
-        Text(browser.urlString.isEmpty ? "Search or enter website name" : browser.urlString)
+        let displayText = addressBarDisplayText()
+        return Text(displayText.isEmpty ? "Search or enter website name" : displayText)
             .fontWeight(.semibold)
             .lineLimit(1)
             .contentShape(Rectangle())
@@ -202,6 +203,54 @@ struct AddressBarView: View {
 
         let url = browser.urlFromUserInput(suggestion)
         browser.load(url: url)
+    }
+
+    private func addressBarDisplayText() -> String {
+        let trimmed = browser.urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        guard let url = URL(string: trimmed),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let host = components.host else {
+            return trimmed
+        }
+        if let query = searchQueryText(host: host, components: components) {
+            return query
+        }
+        if host.hasPrefix("www.") {
+            return String(host.dropFirst(4))
+        }
+        return host
+    }
+
+    private var isSearchResultsPage: Bool {
+        let trimmed = browser.urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let url = URL(string: trimmed),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let host = components.host else {
+            return false
+        }
+        return searchQueryText(host: host, components: components) != nil
+    }
+
+    private func searchQueryText(host: String, components: URLComponents) -> String? {
+        guard isDefaultSearchQueryHost(host),
+              let query = components.queryItems?.first(where: { $0.name == "q" })?.value,
+              !query.isEmpty else {
+            return nil
+        }
+        return query.removingPercentEncoding ?? query
+    }
+
+    private func isDefaultSearchQueryHost(_ host: String) -> Bool {
+        switch appSettings.defaultSearchEngine {
+        case .google:
+            return host == "www.google.com" || host == "google.com"
+        case .bing:
+            return host == "www.bing.com" || host == "bing.com"
+        case .duckduckgo:
+            return host == "duckduckgo.com" || host == "www.duckduckgo.com"
+        }
     }
 }
 
