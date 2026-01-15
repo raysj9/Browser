@@ -36,8 +36,8 @@ struct ToolbarView: View {
             }
         }
         .background(TouchBlockingView())
-        .padding(.horizontal)
-        .padding(.vertical)
-        .glassEffect(.regular.interactive())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
     }
 }

@@ -19,48 +19,44 @@ struct AddressBarView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            GlassEffectContainer(spacing: 12) {
-                HStack(spacing: 12) {
-                    HStack {
-                        if !browser.addressBarIsActive && supportsFoundationModels && !isSearchResultsPage {
-                            summaryButton
-                        }
-
-                        Spacer()
-
-                        if browser.addressBarIsActive {
-                            addressTextField
-                        } else {
-                            addressText
-                        }
-
-                        Spacer()
-                        
-                        if browser.addressBarIsActive {
-                            clearAddressBarTextButton
-                        } else {
-                            refreshButton
-                        }
-
+            HStack(spacing: 12) {
+                HStack {
+                    if !browser.addressBarIsActive && supportsFoundationModels && !isSearchResultsPage {
+                        summaryButton
                     }
-                    .background(TouchBlockingView())
-                    .padding(.horizontal)
-                    .padding(.vertical)
-                    .glassEffect(.regular.interactive())
-                    .glassEffectID("navigationbar", in: namespace)
-                                    
+
+                    Spacer()
+
                     if browser.addressBarIsActive {
-                        cancelButton
+                        addressTextField
+                    } else {
+                        addressText
+                    }
+
+                    Spacer()
+                    
+                    if browser.addressBarIsActive {
+                        clearAddressBarTextButton
+                    } else {
+                        refreshButton
                     }
                 }
-                .contentShape(Rectangle())
-                .onChange(of: browser.addressBarIsActive) { _, active in
-                    if active {
-                        isFieldFocused = true
-                    } else {
-                        isFieldFocused = false
-                        suggestionsModel.clear()
-                    }
+                .background(TouchBlockingView())
+                .padding(.horizontal)
+                .padding(.vertical)
+                .frame(maxWidth: .infinity)
+
+                if browser.addressBarIsActive {
+                    cancelButton
+                }
+            }
+            .contentShape(Rectangle())
+            .onChange(of: browser.addressBarIsActive) { _, active in
+                if active {
+                    isFieldFocused = true
+                } else {
+                    isFieldFocused = false
+                    suggestionsModel.clear()
                 }
             }
 

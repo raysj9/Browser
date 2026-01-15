@@ -7,6 +7,7 @@ struct BrowserView: View {
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.modelContext) private var context
     @State private var toolbarHeight: CGFloat = 0
+    @State private var addressBarHeight: CGFloat = 0
     @Namespace private var tabsTransitionNamespace
 
     var body: some View {
@@ -17,48 +18,56 @@ struct BrowserView: View {
         NavigationStack {
             GeometryReader { geometry in
                 ZStack(alignment: .bottom) {
-                    WebView(webView: manager.webView, topContentInset: geometry.safeAreaInsets.top - 10)
+                    WebView(
+                        webView: manager.webView,
+                        topContentInset: addressBarHeight,
+                        bottomContentInset: toolbarHeight
+                    )
                         .ignoresSafeArea()
 
                     VStack(spacing: 0) {
                         AddressBarView()
-                            .padding(.horizontal, 30)
+                            .frame(maxWidth: .infinity)
+                            .background {
+                                Rectangle()
+                                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 0))
+                                    .ignoresSafeArea(edges: .top)
+                                    .allowsHitTesting(false)
+                            }
                             .background(
                                 GeometryReader { addressBarGeometry in
                                     Color.clear
                                         .onAppear {
-                                            // Calculate total offset needed to move address bar completely off-screen
-                                            let addressBarHeight = addressBarGeometry.size.height
-                                            let topSafeArea = geometry.safeAreaInsets.top
-                                            manager.setAddressBarHideOffset(-(addressBarHeight + topSafeArea))
+                                            addressBarHeight = addressBarGeometry.size.height
+                                        }
+                                        .onChange(of: addressBarGeometry.size.height) { _, newValue in
+                                            addressBarHeight = newValue
                                         }
                                 }
                             )
-                            .offset(y: manager.addressBarOffset)
 
                         Spacer()
-                    
+
                         ToolbarView(tabsTransitionNamespace: tabsTransitionNamespace)
-                            .padding(.horizontal, 30)
+                            .frame(maxWidth: .infinity)
+                            .background {
+                                Rectangle()
+                                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 0))
+                                    .ignoresSafeArea(edges: .bottom)
+                                    .allowsHitTesting(false)
+                            }
                             .background(
                                 GeometryReader { toolbarGeometry in
                                     Color.clear
                                         .onAppear {
-                                            // Calculate total offset needed to move toolbar completely off-screen
-                                            let toolbarHeight = toolbarGeometry.size.height
-                                            let bottomSafeArea = geometry.safeAreaInsets.bottom
-                                            manager.setToolbarHideOffset(toolbarHeight + bottomSafeArea)
-                                            self.toolbarHeight = toolbarHeight
+                                            toolbarHeight = toolbarGeometry.size.height
                                         }
                                         .onChange(of: toolbarGeometry.size.height) { _, newValue in
-                                            self.toolbarHeight = newValue
+                                            toolbarHeight = newValue
                                         }
                                 }
                             )
-                            .offset(y: manager.toolbarOffset)
                     }
-                    .padding(.bottom)
-                    .ignoresSafeArea(edges: .bottom)
 
                     if let toast = toastBinding.toast {
                         ToastView(toast: toast)
