@@ -103,15 +103,24 @@ struct AddressBarView: View {
     
     var addressText: some View {
         let displayText = addressBarDisplayText()
-        return Text(displayText.isEmpty ? "Search or enter website name" : displayText)
-            .fontWeight(.semibold)
-            .lineLimit(1)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                browser.showAddressBar()
-                browser.addressBarIsActive = true
-                isFieldFocused = true
+        return HStack(alignment: .center, spacing: 6) {
+            if hasHTTPS {
+                Image(systemName: "lock.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Secure connection")
             }
+            
+            Text(displayText.isEmpty ? "Search or enter website name" : displayText)
+                .fontWeight(.semibold)
+                .lineLimit(1)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            browser.showAddressBar()
+            browser.addressBarIsActive = true
+            isFieldFocused = true
+        }
     }
     
     var clearAddressBarTextButton: some View {
@@ -240,6 +249,12 @@ struct AddressBarView: View {
             return nil
         }
         return query.removingPercentEncoding ?? query
+    }
+
+    private var hasHTTPS: Bool {
+        let trimmed = browser.urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed) else { return false }
+        return url.scheme?.lowercased() == "https"
     }
 
     private func isSearchEngineHost(_ host: String) -> Bool {
