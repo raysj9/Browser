@@ -8,7 +8,7 @@ struct AISummarySheet: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("AI Summary")
+            Text("Page Summary")
                 .font(.headline)
 
             content
@@ -53,8 +53,7 @@ struct AISummarySheet: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    streamingSection(title: "Key Points", items: partial.key_points)
-                    streamingSection(title: "Important Details", items: partial.important_details)
+                    streamingSection(title: "Details", items: partial.details)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -83,8 +82,7 @@ struct AISummarySheet: View {
                     Text(summary.tldr)
                         .font(.subheadline)
 
-                    section(title: "Key Points", items: summary.keyPoints)
-                    section(title: "Important Details", items: summary.importantDetails)
+                    section(title: "Details", items: summary.details)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -131,14 +129,10 @@ struct AISummarySheet: View {
             skeletonLine(width: 200, height: 12)
 
             VStack(alignment: .leading, spacing: 8) {
-                skeletonLine(width: 80, height: 10)
+                skeletonLine(width: 90, height: 10)
                 skeletonLine(height: 12)
                 skeletonLine(height: 12)
                 skeletonLine(height: 12)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                skeletonLine(width: 110, height: 10)
                 skeletonLine(height: 12)
                 skeletonLine(height: 12)
             }

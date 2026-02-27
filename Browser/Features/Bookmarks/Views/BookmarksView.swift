@@ -8,7 +8,6 @@ struct BookmarksView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.editMode) private var editMode
     @Environment(BrowserManager.self) private var browserManager
 
     @State private var model = BookmarksViewModel()
@@ -16,7 +15,7 @@ struct BookmarksView: View {
     var filteredBookmarks: [BookmarkEntry] { model.filteredEntries(bookmarks: bookmarks) }
 
     var body: some View {
-        List(selection: $model.selection) {
+        List {
             if filteredBookmarks.isEmpty {
                 Section {
                     ContentUnavailableView(
@@ -40,10 +39,6 @@ struct BookmarksView: View {
             model.modelContext = modelContext
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                EditButton()
-            }
-
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button(role: .destructive) {
@@ -73,10 +68,7 @@ struct BookmarksView: View {
 
     @ViewBuilder
     private func row(for bookmark: BookmarkEntry) -> some View {
-        let isEditing = editMode?.wrappedValue.isEditing ?? false
-
         Button {
-            guard !isEditing else { return }
             browserManager.load(url: bookmark.url)
             dismiss()
         } label: {

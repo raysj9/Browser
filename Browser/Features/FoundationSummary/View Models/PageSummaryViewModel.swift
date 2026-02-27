@@ -159,14 +159,12 @@ final class PageSummaryViewModel {
         guard let partial else { return nil }
         guard let title = partial.title else { return nil }
         guard let tldr = partial.tldr else { return nil }
-        guard let keyPoints = partial.key_points, keyPoints.count >= 5 else { return nil }
-        guard let importantDetails = partial.important_details, importantDetails.count >= 3 else { return nil }
+        guard let details = partial.details, details.count >= 8 else { return nil }
 
         return PageSummary(
             title: title,
             tldr: tldr,
-            keyPoints: Array(keyPoints.prefix(5)),
-            importantDetails: Array(importantDetails.prefix(3))
+            details: Array(details.prefix(8))
         )
     }
 
@@ -222,8 +220,7 @@ final class PageSummaryViewModel {
         {
           "title": "",
           "tldr": "",
-          "key_points": ["", "", "", "", ""],
-          "important_details": ["", "", ""]
+          "details": ["", "", "", "", "", "", "", ""]
         }
         """
     }

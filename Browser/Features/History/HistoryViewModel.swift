@@ -6,7 +6,6 @@ class HistoryViewModel {
     var modelContext: ModelContext?
     
     var searchText = ""
-    var selection: Set<UUID> = []
     var isConfirmingClearAll = false
     
     func filteredEntries(entries: [HistoryEntry]) -> [HistoryEntry] {
@@ -48,11 +47,9 @@ class HistoryViewModel {
         for entry in entries {
             modelContext?.delete(entry)
         }
-        selection.subtract(entries.map(\.id))
     }
     
     func clearAll(entries: [HistoryEntry]) {
         delete(entries: entries)
-        selection.removeAll()
     }
 }

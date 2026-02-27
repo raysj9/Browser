@@ -81,7 +81,8 @@ struct TabsViewer: View {
 
         return HStack {
             Button {
-                browserManager.createNewTab()
+                let isPrivate = tabsManager.tabSection == .privateTabs
+                browserManager.createNewTab(isPrivateOverride: isPrivate)
                 dismiss()
             } label: {
                 Image(systemName: "plus")

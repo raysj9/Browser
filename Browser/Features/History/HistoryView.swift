@@ -14,7 +14,6 @@ struct HistoryView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.editMode) private var editMode
     @Environment(BrowserManager.self) private var browserManager
     
     @State private var model = HistoryViewModel()
@@ -23,7 +22,7 @@ struct HistoryView: View {
     var sections: [HistorySection] { model.sections(filteredEntries: filteredEntries) }
     
     var body: some View {
-        List(selection: $model.selection) {
+        List {
             if filteredEntries.isEmpty {
                 Section {
                     ContentUnavailableView(
@@ -51,10 +50,6 @@ struct HistoryView: View {
             model.modelContext = modelContext
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                EditButton()
-            }
-            
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button(role: .destructive) {
@@ -84,10 +79,7 @@ struct HistoryView: View {
     
     @ViewBuilder
     private func row(for entry: HistoryEntry) -> some View {
-        let isEditing = editMode?.wrappedValue.isEditing ?? false
-        
         Button {
-            guard !isEditing else { return }
             browserManager.load(url: entry.url)
             dismiss()
         } label: {

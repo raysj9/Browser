@@ -8,6 +8,7 @@ import WebKit
 final class BrowserManager: NSObject {
     var context: ModelContext?
     weak var appSettings: AppSettings?
+    var tabsManager: TabsManager?
     
     let webView: WKWebView = {
         let config = WKWebViewConfiguration()
@@ -32,7 +33,11 @@ final class BrowserManager: NSObject {
     var isPresentingSettingsSheet: Bool = false
     var isPresentingBookmarksSheet: Bool = false
     var isPresentingSummarySheet: Bool = false
+    var isPresentingFindInPageSheet: Bool = false
     var isPresentingTabsView: Bool = false
+
+    var findInPageQuery: String = ""
+    var findInPageMatchFound: Bool = true
     
     // Address bar scroll behavior
     var addressBarOffset: CGFloat = 0
@@ -238,12 +243,35 @@ final class BrowserManager: NSObject {
         updateNavigationState()
     }
 
+    func updateFindInPageQuery(_ query: String) {
+        findInPageQuery = query
+        guard !query.isEmpty else {
+            clearFindInPageHighlights()
+            findInPageMatchFound = true
+            return
+        }
+
+        performFindInPage(query: query, backwards: false)
+    }
+
+    func findInPageNext() {
+        guard !findInPageQuery.isEmpty else { return }
+        performFindInPage(query: findInPageQuery, backwards: false)
+    }
+
+    func findInPagePrevious() {
+        guard !findInPageQuery.isEmpty else { return }
+        performFindInPage(query: findInPageQuery, backwards: true)
+    }
+
     func createNewTab(isPrivateOverride: Bool? = nil) {
         guard let context else { return }
         let url = appSettings?.homepageURL
             ?? appSettings?.defaultSearchEngine.searchURL(for: "")
             ?? URL(string: "https://www.google.com")!
-        let resolvedIsPrivate = isPrivateOverride ?? (activeTab()?.isPrivate ?? false)
+        let resolvedIsPrivate = isPrivateOverride
+            ?? (tabsManager?.tabSection == .privateTabs)
+            ?? (activeTab()?.isPrivate ?? false)
         let newTab = BrowserTab(
             title: url.host ?? url.absoluteString,
             url: url,
@@ -526,6 +554,39 @@ private extension BrowserManager {
                 continuation.resume(returning: data)
             }
         }
+    }
+
+    func performFindInPage(query: String, backwards: Bool) {
+        let configuration = WKFindConfiguration()
+        configuration.backwards = backwards
+        configuration.wraps = true
+
+        webView.find(query, configuration: configuration) { [weak self] result in
+            self?.findInPageMatchFound = result.matchFound
+            if result.matchFound {
+                self?.scrollToFindSelection()
+            }
+        }
+    }
+
+    func clearFindInPageHighlights() {
+        webView.evaluateJavaScript("window.getSelection().removeAllRanges()") { _, _ in }
+    }
+
+    func scrollToFindSelection() {
+        let script = """
+        (function() {
+            var selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) { return false; }
+            var range = selection.getRangeAt(0);
+            var node = range.startContainer;
+            var element = (node.nodeType === Node.ELEMENT_NODE) ? node : node.parentElement;
+            if (!element) { return false; }
+            element.scrollIntoView({ block: 'center', inline: 'nearest' });
+            return true;
+        })();
+        """
+        webView.evaluateJavaScript(script) { _, _ in }
     }
 }
 

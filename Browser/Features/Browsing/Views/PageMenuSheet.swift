@@ -36,8 +36,15 @@ struct PageMenuSheet: View {
                     }
                     .buttonStyle(.plain)
                     
-                    Label("Find in Page...", systemImage: "magnifyingglass")
-                        .labelStyle(.menu)
+                    Button {
+                        browser.isPresentingPageMenuSheet = false
+                        browser.isPresentingFindInPageSheet = true
+                    } label: {
+                        Label("Find in Page...", systemImage: "magnifyingglass")
+                            .labelStyle(.menu)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
 
                     if let url = browser.webView.url {
                         ShareLink(item: url) {

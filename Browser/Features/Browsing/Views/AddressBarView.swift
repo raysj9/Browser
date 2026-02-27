@@ -56,7 +56,6 @@ struct AddressBarView: View {
                     .progressViewStyle(.linear)
                     .frame(maxWidth: .infinity)
                     .opacity(browser.isLoading ? 1 : 0)
-                    .padding(.bottom, 4)
             }
             .onChange(of: browser.addressBarIsActive) { _, active in
                 if active {

@@ -6,7 +6,6 @@ class BookmarksViewModel {
     var modelContext: ModelContext?
 
     var searchText = ""
-    var selection: Set<UUID> = []
     var isConfirmingClearAll = false
 
     func filteredEntries(bookmarks: [BookmarkEntry]) -> [BookmarkEntry] {
@@ -26,11 +25,9 @@ class BookmarksViewModel {
         for bookmark in bookmarks {
             modelContext?.delete(bookmark)
         }
-        selection.subtract(bookmarks.map(\.id))
     }
 
     func clearAll(bookmarks: [BookmarkEntry]) {
         delete(bookmarks: bookmarks)
-        selection.removeAll()
     }
 }

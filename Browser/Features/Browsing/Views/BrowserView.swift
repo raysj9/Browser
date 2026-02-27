@@ -2,6 +2,7 @@ import SwiftUI
 struct BrowserView: View {
     @Environment(BrowserManager.self) private var manager
     @Environment(AppSettings.self) private var appSettings
+    @Environment(TabsManager.self) private var tabsManager
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.modelContext) private var context
     @Namespace private var tabsTransitionNamespace
@@ -22,6 +23,14 @@ struct BrowserView: View {
 
                     ToolbarView(tabsTransitionNamespace: tabsTransitionNamespace)
                         .frame(maxWidth: .infinity)
+                }
+
+                if managerBinding.isPresentingFindInPageSheet {
+                    FindInPageBar()
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 88)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .zIndex(2)
                 }
 
                 if let toast = toastBinding.toast {
@@ -67,6 +76,7 @@ struct BrowserView: View {
         .task {
             manager.context = context
             manager.appSettings = appSettings
+            manager.tabsManager = tabsManager
             manager.loadInitialTabIfNeeded()
         }
     }
